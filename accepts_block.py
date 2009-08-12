@@ -5,6 +5,10 @@ import inspect
 def accepts_block(f):
   class _accepts_block(object):
     def __call__(self, *args, **kwargs):
+      #assume that if the args are the same length as the function's args,
+      #we just want to pass call through to the function. This way, a call
+      #to a function decorated by accepts_block that occurs outside of a with
+      #statement should function normally
       if len(args) == len(inspect.getargspec(f)[0]):
         return f(*args, **kwargs)
       self.thefunction = partial(f, *args, **kwargs)
@@ -27,15 +31,20 @@ def accepts_block(f):
         anf = self.mustignore[n]
         if id(newf) != id(anf):
           interesting[n] = newf
+
       if interesting:
         if len(interesting) > 2:
           raise "you are only allowed to define a single function inside this with block"
+
         elif len(interesting) == 1:
           block = list(interesting.itervalues())[0]
           if not isinstance(block, type(lambda:None)):
             raise "you must define a function inside this with block"
           self.thefunction(block)
+
         elif len(interesting) == 2:
+          #look for a block and any other name, and assume the name is where
+          #we want to store our results
           block = None
           savename = None
           for n,v in interesting.iteritems():
@@ -44,4 +53,5 @@ def accepts_block(f):
           if not savename or not isinstance(block, type(lambda:None)):
             raise "you must define a single function inside this with block"
           frame.f_locals[savename] = self.thefunction(block)
+
   return _accepts_block()
