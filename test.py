@@ -8,7 +8,18 @@ def bmap(arr, block):
 with bmap([1,2,3]) as zootrope:
   def foo(x):
     return (float(x) + 1) / 2
-print zootrope
+print "should be [1.0, 1.5, 2.0]", zootrope
+
+#Chris Siebenmann has pointed out to me that this technique doesn't work
+#when the with statement is inside a function; in this case f_locals is
+#a read-only dictionary. I'm not quite clear on when f_locals is read-only
+#and when it's not, so please clarify it for me if you know.
+def test():
+  with bmap([1,2,3]) as zootrope:
+    def foo(x):
+      return (float(x) + 1) / 2
+  print "should be [1.0, 1.5, 2.0], but is None:", zootrope
+test()
 
 #make sure it works if we don't use a with block
 print bmap([1,2,3], lambda x: (float(x)+1)/2)
